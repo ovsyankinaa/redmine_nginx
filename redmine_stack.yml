@@ -1,0 +1,75 @@
+version: '3.1'
+
+services:
+
+  redmine:
+    container_name: Redmine
+    image: redmine:5.0.0
+    restart: always
+    environment:
+      REDMINE_DB_MYSQL: db
+      REDMINE_DB_PASSWORD_FILE: /run/secrets/redmine_pass
+    networks:
+      - redmine
+    volumes:
+      - $PWD/data:/usr/src/redmine/files
+    depends_on:
+      db:
+        condition: service_healthy  
+    secrets:
+      - redmine_pass
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 5s
+      timeout: 10s
+      retries: 5
+    logging:
+      driver: journald
+
+  db:
+    container_name: MySQL
+    image: mysql:5.7
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/mysql_pass
+      MYSQL_DATABASE: redmine
+    networks:
+      - redmine
+    volumes:
+      - $PWD/mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 20s
+      retries: 10    
+    secrets:
+      - mysql_pass
+    logging:
+      driver: journald
+
+  web:
+    container_name: Web
+    image: nginx:1.21.6
+    restart: always
+    ports:
+      - 443:443
+    networks:
+      - redmine
+    volumes:
+      - $PWD/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - $PWD/certs:/etc/ssl/certs/nginx
+    depends_on:
+      redmine:
+        condition: service_healthy 
+    logging:
+      driver: journald
+
+networks:
+  redmine:
+    name: redmine
+
+secrets:
+  redmine_pass:
+    file: ./redmine_pass  
+  mysql_pass:
+    file: ./mysql_pass

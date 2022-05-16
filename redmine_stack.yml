@@ -13,6 +13,7 @@ services:
       - redmine
     volumes:
       - $PWD/data:/usr/src/redmine/files
+      - $PWD/plugins:/usr/src/redmine/plugins
     depends_on:
       db:
         condition: service_healthy  
@@ -20,7 +21,7 @@ services:
       - redmine_pass
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000"]
-      interval: 5s
+      interval: 10s
       timeout: 10s
       retries: 5
     logging:

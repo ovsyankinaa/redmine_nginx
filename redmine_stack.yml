@@ -12,8 +12,7 @@ services:
     networks:
       - redmine
     volumes:
-      - $PWD/data:/usr/src/redmine/files
-      - $PWD/plugins:/usr/src/redmine/plugins
+      - $PWD/data:/usr/src/redmine
     depends_on:
       db:
         condition: service_healthy  
